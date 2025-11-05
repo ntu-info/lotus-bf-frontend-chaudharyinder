@@ -4,11 +4,13 @@ import { Terms } from './components/Terms'
 import { QueryBuilder } from './components/QueryBuilder'
 import { Studies } from './components/Studies'
 import { NiiViewer } from './components/NiiViewer'
+import { Locations } from './components/Locations'
 import { useUrlQueryState } from './hooks/useUrlQueryState'
 import './App.css'
 
 export default function App () {
   const [query, setQuery] = useUrlQueryState('q')
+  const [activeTab, setActiveTab] = useState('studies')
 
   const handlePickTerm = useCallback((t) => {
     setQuery((q) => (q ? `${q} ${t}` : t))
@@ -160,11 +162,31 @@ export default function App () {
         <div className="resizer" aria-label="Resize left/middle" onMouseDown={(e) => startDrag(0, e)} />
 
         <section className="card card--stack" style={{ flexBasis: `${sizes[1]}%` }}>
-          <QueryBuilder query={query} setQuery={setQuery} />
-          {/* <div className="hint">Current Query：<code className="hint__code">{query || '(empty)'}</code></div> */}
-          <div className="divider" />
-          <Studies query={query} />
-        </section>
+        <QueryBuilder query={query} setQuery={setQuery} />
+        <div className="divider" />
+        
+        {/* --- ADD TABS HERE --- */}
+        <div className="tabs">
+          <button 
+            className={`tab-btn ${activeTab === 'studies' ? 'active' : ''}`}
+            onClick={() => setActiveTab('studies')}
+          >
+            Studies
+          </button>
+          <button 
+            className={`tab-btn ${activeTab === 'locations' ? 'active' : ''}`}
+            onClick={() => setActiveTab('locations')}
+          >
+            Locations
+          </button>
+        </div>
+
+        {/* --- ADD CONDITIONAL CONTENT HERE --- */}
+        <div className="tab-content">
+          {activeTab === 'studies' && <Studies query={query} />}
+          {activeTab === 'locations' && <Locations query={query} />}
+        </div>
+      </section>
 
         <div className="resizer" aria-label="Resize middle/right" onMouseDown={(e) => startDrag(1, e)} />
 
