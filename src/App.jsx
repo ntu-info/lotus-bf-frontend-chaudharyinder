@@ -6,6 +6,7 @@ import { Studies } from './components/Studies'
 import { NiiViewer } from './components/NiiViewer'
 import { Locations } from './components/Locations'
 import { useUrlQueryState } from './hooks/useUrlQueryState'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import './App.css'
 
 export default function App () {
@@ -165,27 +166,19 @@ export default function App () {
         <QueryBuilder query={query} setQuery={setQuery} />
         <div className="divider" />
         
-        {/* --- ADD TABS HERE --- */}
-        <div className="tabs">
-          <button 
-            className={`tab-btn ${activeTab === 'studies' ? 'active' : ''}`}
-            onClick={() => setActiveTab('studies')}
-          >
-            Studies
-          </button>
-          <button 
-            className={`tab-btn ${activeTab === 'locations' ? 'active' : ''}`}
-            onClick={() => setActiveTab('locations')}
-          >
-            Locations
-          </button>
-        </div>
-
-        {/* --- ADD CONDITIONAL CONTENT HERE --- */}
-        <div className="tab-content">
-          {activeTab === 'studies' && <Studies query={query} />}
-          {activeTab === 'locations' && <Locations query={query} />}
-        </div>
+        {/* --- ADD SHADCN TABS HERE --- */}
+        <Tabs defaultValue="studies" className="flex-grow flex flex-col">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="studies">Studies</TabsTrigger>
+            <TabsTrigger value="locations">Locations</TabsTrigger>
+          </TabsList>
+          <TabsContent value="studies" className="flex-grow overflow-auto">
+            <Studies query={query} />
+          </TabsContent>
+          <TabsContent value="locations" className="flex-grow overflow-auto">
+            <Locations query={query} />
+          </TabsContent>
+        </Tabs>
       </section>
 
         <div className="resizer" aria-label="Resize middle/right" onMouseDown={(e) => startDrag(1, e)} />

@@ -102,38 +102,3 @@ button:disabled, .btn:disabled { opacity:.55; cursor:not-allowed; }
 @media (min-width: 1024px) {
   .qb__input { min-width: 640px; }
 }
-
-/* --- Add this to the bottom of App.css --- */
-
-.tabs {
-  display: flex;
-  flex-direction: row;
-  border-bottom: 1px solid var(--border);
-  padding: 0 1rem;
-  gap: 4px;
-}
-
-.tab-btn {
-  padding: 8px 16px;
-  background: none;
-  border: none;
-  border-bottom: 3px solid transparent;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
-  color: #6b7280; /* gray-500 */
-}
-
-.tab-btn:hover {
-  background-color: #f9fafb; /* gray-50 */
-}
-
-.tab-btn.active {
-  color: var(--primary-700);
-  border-bottom-color: var(--primary-700);
-}
-
-.tab-content {
-  flex-grow: 1;
-  overflow-y: auto;
-}

@@ -1,3 +1,5 @@
+import { Button } from "@/components/ui/button"
+
 export function QueryBuilder({ query, setQuery }) {
   const append = (token) => setQuery((q) => (q ? `${q} ${token}` : token));
 
@@ -35,13 +37,13 @@ export function QueryBuilder({ query, setQuery }) {
           // Reset moved here after ')' per requirement
           { label: 'Reset', onClick: () => setQuery('') },
         ].map((b) => (
-          <button
+          <Button
             key={b.label}
             onClick={b.onClick}
-            className="rounded-xl border px-3 py-2 text-sm hover:bg-gray-50"
+            variant={b.label === 'Reset' ? 'destructive' : 'outline'}
           >
             {b.label}
-          </button>
+          </Button>
         ))}
       </div>
 
