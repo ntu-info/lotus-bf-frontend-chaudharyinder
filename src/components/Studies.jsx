@@ -1,7 +1,14 @@
 import { API_BASE } from '../api'
 import { useEffect, useMemo, useState } from 'react'
-
-function classNames (...xs) { return xs.filter(Boolean).join(' ') }
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { Button } from "@/components/ui/button"
 
 export function Studies ({ query }) {
   const [rows, setRows] = useState([])
@@ -51,7 +58,6 @@ export function Studies ({ query }) {
     arr.sort((a, b) => {
       const A = a?.[sortKey]
       const B = b?.[sortKey]
-      // Numeric comparison for year; string comparison for other fields
       if (sortKey === 'year') return (Number(A || 0) - Number(B || 0)) * dir
       return String(A || '').localeCompare(String(B || ''), 'en') * dir
     })
@@ -62,79 +68,81 @@ export function Studies ({ query }) {
   const pageRows = sorted.slice((page - 1) * pageSize, page * pageSize)
 
   return (
-    <div className='flex flex-col rounded-2xl border'>
-      <div className='flex items-center justify-between p-3'>
-        <div className='card__title'>Studies</div>
-        <div className='text-sm text-gray-500'>
-           {/* {query ? `Query: ${query}` : 'Query: (empty)'} */}
-        </div>
-      </div>
-
-
+    <div className='flex flex-col'>
+      {/* This component's parent <TabsContent> handles the border/rounding */}
+      {/* We removed the title as it's now in the TabTrigger */}
+      
       {query && loading && (
         <div className='grid gap-3 p-3'>
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className='h-10 animate-pulse rounded-lg bg-gray-100' />
+            <div key={i} className='h-10 animate-pulse rounded-lg bg-muted' />
           ))}
         </div>
       )}
 
       {query && err && (
-        <div className='mx-3 mb-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700'>
+        <div className='m-3 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive'>
           {err}
         </div>
       )}
 
       {query && !loading && !err && (
-        <div className='overflow-auto'>
-          <table className='min-w-full text-sm'>
-            <thead className='sticky top-0 bg-gray-50 text-left'>
-              <tr>
-                {[
-                  { key: 'year', label: 'Year' },
-                  { key: 'journal', label: 'Journal' },
-                  { key: 'title', label: 'Title' },
-                  { key: 'authors', label: 'Authors' }
-                ].map(({ key, label }) => (
-                  <th key={key} className='cursor-pointer px-3 py-2 font-semibold' onClick={() => changeSort(key)}>
-                    <span className='inline-flex items-center gap-2'>
-                      {label}
-                      <span className='text-xs text-gray-500'>{sortKey === key ? (sortDir === 'asc' ? '▲' : '▼') : ''}</span>
-                    </span>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {pageRows.length === 0 ? (
-                <tr><td colSpan={4} className='px-3 py-4 text-gray-500'>No data</td></tr>
-              ) : (
-                pageRows.map((r, i) => (
-                  <tr key={i} className={classNames(i % 2 ? 'bg-white' : 'bg-gray-50')}>
-                    <td className='whitespace-nowrap px-3 py-2 align-top'>{r.year ?? ''}</td>
-                    <td className='px-3 py-2 align-top'>{r.journal || ''}</td>
-                    <td className='max-w-[540px] px-3 py-2 align-top'><div className='truncate' title={r.title}>{r.title || ''}</div></td>
-                    <td className='px-3 py-2 align-top'>{r.authors || ''}</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {query && !loading && !err && (
-        <div className='flex items-center justify-between border-t p-3 text-sm'>
-          <div>Total <b>{sorted.length}</b> records, page <b>{page}</b>/<b>{totalPages}</b></div>
-          <div className='flex items-center gap-2'>
-            <button disabled={page <= 1} onClick={() => setPage(1)} className='rounded-lg border px-2 py-1 disabled:opacity-40'>⏮</button>
-            <button disabled={page <= 1} onClick={() => setPage(p => Math.max(1, p - 1))} className='rounded-lg border px-2 py-1 disabled:opacity-40'>Previous</button>
-            <button disabled={page >= totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))} className='rounded-lg border px-2 py-1 disabled:opacity-40'>Next</button>
-            <button disabled={page >= totalPages} onClick={() => setPage(totalPages)} className='rounded-lg border px-2 py-1 disabled:opacity-40'>⏭</button>
+        <>
+          <div className='overflow-auto'>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  {[
+                    { key: 'year', label: 'Year' },
+                    { key: 'journal', label: 'Journal' },
+                    { key: 'title', label: 'Title' },
+                    { key: 'authors', label: 'Authors' }
+                  ].map(({ key, label }) => (
+                    <TableHead key={key} className='cursor-pointer' onClick={() => changeSort(key)}>
+                      <span className='inline-flex items-center gap-2'>
+                        {label}
+                        <span className='text-xs text-muted-foreground'>{sortKey === key ? (sortDir === 'asc' ? '▲' : '▼') : ''}</span>
+                      </span>
+                    </TableHead>
+                  ))}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {pageRows.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className='h-24 text-center text-muted-foreground'>
+                      No data
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  pageRows.map((r, i) => (
+                    <TableRow key={i}>
+                      <TableCell className='whitespace-nowrap align-top'>{r.year ?? ''}</TableCell>
+                      <TableCell className='align-top'>{r.journal || ''}</TableCell>
+                      <TableCell className='max-w-[340px] align-top'>
+                        <div className='truncate' title={r.title}>{r.title || ''}</div>
+                      </TableCell>
+                      <TableCell className='align-top'>{r.authors || ''}</TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
           </div>
-        </div>
+
+          <div className='flex items-center justify-between border-t p-3 text-sm'>
+            <div className='text-muted-foreground'>
+              Total <b>{sorted.length}</b> records, page <b>{page}</b>/<b>{totalPages}</b>
+            </div>
+            <div className='flex items-center gap-2'>
+              <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => setPage(1)}>⏮</Button>
+              <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => setPage(p => Math.max(1, p - 1))}>Previous</Button>
+              <Button size="sm" variant="outline" disabled={page >= totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))}>Next</Button>
+              <Button size="sm" variant="outline" disabled={page >= totalPages} onClick={() => setPage(totalPages)}>⏭</Button>
+            </div>
+          </div>
+        </>
       )}
     </div>
   )
 }
-

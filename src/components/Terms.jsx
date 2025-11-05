@@ -1,5 +1,7 @@
 import { API_BASE } from '../api'
 import { useEffect, useMemo, useState } from 'react'
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 
 export function Terms ({ onPickTerm }) {
   const [terms, setTerms] = useState([])
@@ -37,55 +39,54 @@ export function Terms ({ onPickTerm }) {
   }, [terms, search])
 
   return (
-    <div className='terms'>
-      {/* Removed internal <h2> to avoid double "Terms" header. The bold title now comes from App.jsx card__title. */}
-
-      <div className='terms__controls'>
-        <input
+    <div className='flex flex-col h-full gap-3'>
+      <div className='flex w-full items-center gap-2'>
+        <Input
+          type="search"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder='Search terms…'
-          className='input'
         />
-        <button
+        <Button
+          variant="outline"
+          size="sm"
           onClick={() => setSearch('')}
-          className='btn btn--primary'
         >
           Clear
-        </button>
+        </Button>
       </div>
 
       {loading && (
-        <div className='terms__skeleton'>
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className='terms__skeleton-row' />
+        <div className='space-y-2 p-2'>
+          {Array.from({ length: 10 }).map((_, i) => (
+            <div key={i} className='h-5 animate-pulse rounded-md bg-muted' />
           ))}
         </div>
       )}
 
       {err && (
-        <div className='alert alert--error'>
+        <div className='p-2 text-sm text-destructive'>
           {err}
         </div>
       )}
 
       {!loading && !err && (
-        <div className='terms__list'>
+        <div className='flex-grow overflow-auto'>
           {filtered.length === 0 ? (
-            <div className='terms__empty'>No terms found</div>
+            <div className='p-2 text-sm text-muted-foreground'>No terms found</div>
           ) : (
-            <ul className='terms__ul'>
+            <ul>
               {filtered.slice(0, 500).map((t, idx) => (
-                <li key={`${t}-${idx}`} className='terms__li'>
+                <li key={`${t}-${idx}`}>
                   <a
-  href="#"
-  className='terms__name'
-  title={t}
-  aria-label={`Add term ${t}`}
-  onClick={(e) => { e.preventDefault(); onPickTerm?.(t); }}
->
-  {t}
-</a>
+                    href="#"
+                    className='block w-full text-left p-1.5 rounded text-sm hover:bg-muted'
+                    title={t}
+                    aria-label={`Add term ${t}`}
+                    onClick={(e) => { e.preventDefault(); onPickTerm?.(t); }}
+                  >
+                    {t}
+                  </a>
                 </li>
               ))}
             </ul>
@@ -95,4 +96,3 @@ export function Terms ({ onPickTerm }) {
     </div>
   )
 }
-

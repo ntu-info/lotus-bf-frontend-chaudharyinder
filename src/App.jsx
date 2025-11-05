@@ -1,4 +1,3 @@
-
 import { useCallback, useRef, useState } from 'react'
 import { Terms } from './components/Terms'
 import { QueryBuilder } from './components/QueryBuilder'
@@ -11,7 +10,7 @@ import './App.css'
 
 export default function App () {
   const [query, setQuery] = useUrlQueryState('q')
-  const [activeTab, setActiveTab] = useState('studies')
+  // const [activeTab, setActiveTab] = useState('studies') // <-- REMOVED
 
   const handlePickTerm = useCallback((t) => {
     setQuery((q) => (q ? `${q} ${t}` : t))
@@ -61,93 +60,7 @@ export default function App () {
 
   return (
     <div className="app">
-      {/* Inline style injection to enforce no-hover look */}
-      <style>{`
-        :root {
-          --primary-600: #2563eb;
-          --primary-700: #1d4ed8;
-          --primary-800: #1e40af;
-          --border: #e5e7eb;
-        }
-        .app { padding-right: 0 !important; }
-        .app__grid { width: 100vw; max-width: 100vw; }
-        .card input[type="text"],
-        .card input[type="search"],
-        .card input[type="number"],
-        .card select,
-        .card textarea {
-          width: 100% !important;
-          max-width: 100% !important;
-          display: block;
-        }
-        /* Downsized buttons */
-        .card button,
-        .card [role="button"],
-        .card .btn,
-        .card .button {
-          font-size: 12px !important;
-          padding: 4px 8px !important;
-          border-radius: 8px !important;
-          line-height: 1.2 !important;
-          background: var(--primary-600) !important;
-          color: #fff !important;
-          border: none !important;
-        }
-        /* No visual change on hover/active */
-        .card button:hover,
-        .card button:active,
-        .card [role="button"]:hover,
-        .card [role="button"]:active,
-        .card .btn:hover,
-        .card .btn:active,
-        .card .button:hover,
-        .card .button:active {
-          background: var(--primary-600) !important;
-          color: #fff !important;
-        }
-        /* Toolbars / chips also no-hover */
-        .card .toolbar button,
-        .card .toolbar [role="button"],
-        .card .toolbar .btn,
-        .card .toolbar .button,
-        .card .qb-toolbar button,
-        .card .qb-toolbar [role="button"],
-        .card .qb-toolbar .btn,
-        .card .qb-toolbar .button,
-        .card .query-builder button,
-        .card .query-builder [role="button"],
-        .card .query-builder .btn,
-        .card .query-builder .button,
-        .card .chip,
-        .card .pill,
-        .card .tag {
-          background: var(--primary-600) !important;
-          color: #fff !important;
-          border: none !important;
-        }
-        .card .toolbar button:hover,
-        .card .qb-toolbar button:hover,
-        .card .query-builder button:hover,
-        .card .chip:hover,
-        .card .pill:hover,
-        .card .tag:hover,
-        .card .toolbar button:active,
-        .card .qb-toolbar button:active,
-        .card .query-builder button:active {
-          background: var(--primary-600) !important;
-          color: #fff !important;
-        }
-        /* Disabled stays same color but dimmer for affordance */
-        .card .toolbar button:disabled,
-        .card .qb-toolbar button:disabled,
-        .card .query-builder button:disabled,
-        .card button[disabled],
-        .card [aria-disabled="true"] {
-          background: var(--primary-600) !important;
-          color: #fff !important;
-          opacity: .55 !important;
-        }
-      `}</style>
+      {/* The entire <style> block has been REMOVED */}
 
       <header className="app__header">
         <h1 className="app__title">LoTUS-BF</h1>
@@ -163,23 +76,26 @@ export default function App () {
         <div className="resizer" aria-label="Resize left/middle" onMouseDown={(e) => startDrag(0, e)} />
 
         <section className="card card--stack" style={{ flexBasis: `${sizes[1]}%` }}>
-        <QueryBuilder query={query} setQuery={setQuery} />
-        <div className="divider" />
-        
-        {/* --- ADD SHADCN TABS HERE --- */}
-        <Tabs defaultValue="studies" className="flex-grow flex flex-col">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="studies">Studies</TabsTrigger>
-            <TabsTrigger value="locations">Locations</TabsTrigger>
-          </TabsList>
-          <TabsContent value="studies" className="flex-grow overflow-auto">
-            <Studies query={query} />
-          </TabsContent>
-          <TabsContent value="locations" className="flex-grow overflow-auto">
-            <Locations query={query} />
-          </TabsContent>
-        </Tabs>
-      </section>
+          <QueryBuilder query={query} setQuery={setQuery} />
+          {/* <div className="divider" /> */} {/* <-- REMOVED */}
+          
+          {/* --- SHADCN TABS --- */}
+          <Tabs defaultValue="studies" className="flex-grow flex flex-col">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="studies">Studies</TabsTrigger>
+              <TabsTrigger value="locations">Locations</TabsTrigger>
+            </TabsList>
+            {/* Added 'className' to TabsContent to make the content scrollable.
+              You may need to tweak this, but 'overflow-auto' is a good start.
+            */}
+            <TabsContent value="studies" className="flex-grow overflow-auto">
+              <Studies query={query} />
+            </TabsContent>
+            <TabsContent value="locations" className="flex-grow overflow-auto">
+              <Locations query={query} />
+            </TabsContent>
+          </Tabs>
+        </section>
 
         <div className="resizer" aria-label="Resize middle/right" onMouseDown={(e) => startDrag(1, e)} />
 
