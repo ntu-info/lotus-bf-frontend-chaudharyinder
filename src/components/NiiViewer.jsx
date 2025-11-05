@@ -270,7 +270,8 @@ export function NiiViewer({ query }) {
     if (axis === 'x') { w = ny; h = nz; if (bgOK)  getBG  = (x,y)=> bg.data[index + x*nx + y*nx*ny]; if (mapOK) getMap = (x,y)=> map.data[index + x*nx + y*nx*ny] }
 
     if (!canvas || w === 0 || h === 0) return; // Guard clause
-    canvas.width = w; canvas.height = h
+    canvas.width = w; canvas.height = h;
+    canvas.style.aspectRatio = `${w} / ${h}`; // <-- *** FIX 1: ADDED THIS LINE ***
     const ctx = canvas.getContext('2d', { willReadFrequently: false })
     if (!ctx) return; // Guard clause
     const img = ctx.createImageData(w, h)
@@ -420,7 +421,7 @@ export function NiiViewer({ query }) {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value='value'>Value</SelectItem>
-              <SelectItem value='pctl'>Percentile</SelectItem>
+              <SelectItem value->Percentile</SelectItem>
             </SelectContent>
           </Select>
         
@@ -514,7 +515,8 @@ export function NiiViewer({ query }) {
               <div className='text-xs text-muted-foreground'>{name} ({axisLabel})</div>
               <canvas
                 ref={canvasRef}
-                className='h-64 w-full rounded-xl border object-contain'
+                // --- *** FIX 2: MODIFIED THIS LINE *** ---
+                className='w-full rounded-xl border' // Removed 'h-64' and 'object-contain'
                 onClick={(e)=>onCanvasClick(e, key)}
                 style={{ cursor: 'crosshair', imageRendering: 'pixelated' }}
               />

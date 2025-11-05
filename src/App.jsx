@@ -6,11 +6,20 @@ import { NiiViewer } from './components/NiiViewer'
 import { Locations } from './components/Locations'
 import { useUrlQueryState } from './hooks/useUrlQueryState'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+
+// --- NEW IMPORTS ---
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+// ---------------------
+
 import './App.css'
 
 export default function App () {
   const [query, setQuery] = useUrlQueryState('q')
-  // const [activeTab, setActiveTab] = useState('studies') // <-- REMOVED
 
   const handlePickTerm = useCallback((t) => {
     setQuery((q) => (q ? `${q} ${t}` : t))
@@ -22,6 +31,7 @@ export default function App () {
   const MIN_PX = 240
 
   const startDrag = (which, e) => {
+    // ... (This entire function is unchanged)
     e.preventDefault()
     const startX = e.clientX
     const rect = gridRef.current.getBoundingClientRect()
@@ -59,8 +69,9 @@ export default function App () {
   }
 
   return (
-    <div className="app">
-      {/* The entire <style> block has been REMOVED */}
+    // Added flex flex-col to make the app fill the screen height
+    <div className="app flex flex-col">
+      {/* The <style> block is gone */}
 
       <header className="app__header">
         <h1 className="app__title">LoTUS-BF</h1>
@@ -68,40 +79,62 @@ export default function App () {
       </header>
 
       <main className="app__grid" ref={gridRef}>
-        <section className="card" style={{ flexBasis: `${sizes[0]}%` }}>
-          <div className="card__title">Terms</div>
-          <Terms onPickTerm={handlePickTerm} />
-        </section>
+        
+        {/* --- LEFT PANE (Updated) --- */}
+        <Card
+          style={{ flexBasis: `${sizes[0]}%` }}
+          className="flex flex-col overflow-hidden" // flex-col lets content fill space
+        >
+          <CardHeader>
+            <CardTitle>Terms</CardTitle>
+          </CardHeader>
+          <CardContent className="flex-grow overflow-auto"> {/* flex-grow makes it fill */}
+            <Terms onPickTerm={handlePickTerm} />
+          </CardContent>
+        </Card>
 
         <div className="resizer" aria-label="Resize left/middle" onMouseDown={(e) => startDrag(0, e)} />
 
-        <section className="card card--stack" style={{ flexBasis: `${sizes[1]}%` }}>
-          <QueryBuilder query={query} setQuery={setQuery} />
-          {/* <div className="divider" /> */} {/* <-- REMOVED */}
-          
-          {/* --- SHADCN TABS --- */}
-          <Tabs defaultValue="studies" className="flex-grow flex flex-col">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="studies">Studies</TabsTrigger>
-              <TabsTrigger value="locations">Locations</TabsTrigger>
-            </TabsList>
-            {/* Added 'className' to TabsContent to make the content scrollable.
-              You may need to tweak this, but 'overflow-auto' is a good start.
-            */}
-            <TabsContent value="studies" className="flex-grow overflow-auto">
-              <Studies query={query} />
-            </TabsContent>
-            <TabsContent value="locations" className="flex-grow overflow-auto">
-              <Locations query={query} />
-            </TabsContent>
-          </Tabs>
-        </section>
+        {/* --- MIDDLE PANE (Updated) --- */}
+        <Card
+          style={{ flexBasis: `${sizes[1]}%` }}
+          className="flex flex-col overflow-hidden"
+        >
+          {/* QueryBuilder is now in a CardHeader for better spacing */}
+          <CardHeader>
+            <QueryBuilder query={query} setQuery={setQuery} />
+          </CardHeader>
+          <CardContent className="flex-grow flex flex-col"> {/* flex-grow */}
+            <Tabs defaultValue="studies" className="flex-grow flex flex-col">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="studies">Studies</TabsTrigger>
+                <TabsTrigger value="locations">Locations</TabsTrigger>
+              </TabsList>
+              <TabsContent value="studies" className="flex-grow overflow-auto">
+                <Studies query={query} />
+              </TabsContent>
+              <TabsContent value="locations" className="flex-grow overflow-auto">
+                <Locations query={query} />
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
 
         <div className="resizer" aria-label="Resize middle/right" onMouseDown={(e) => startDrag(1, e)} />
 
-        <section className="card" style={{ flexBasis: `${sizes[2]}%` }}>
-          <NiiViewer query={query} />
-        </section>
+        {/* --- RIGHT PANE (Updated) --- */}
+        <Card
+          style={{ flexBasis: `${sizes[2]}%` }}
+          className="flex flex-col overflow-auto" // overflow-auto to scroll the whole pane
+        >
+          <CardHeader>
+            <CardTitle>NIfTI Viewer</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <NiiViewer query={query} />
+          </CardContent>
+        </Card>
+        
       </main>
     </div>
   )

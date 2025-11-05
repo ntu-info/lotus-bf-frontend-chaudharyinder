@@ -32,16 +32,19 @@ body {
 .app__title { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: .2px; }
 .app__subtitle { margin-top: 4px; color: var(--muted); font-size: 13px; }
 
-.app__grid { display: flex; gap: 0; width: 100%; }
+.app__grid {
+  display: flex;
+  flex: 1; /* Make it fill the remaining height */
+  overflow: hidden;
+  padding: 1rem; /* Add breathing room around the entire grid */
+  gap: 1rem; /* Add spacing between the columns */
+  background-color: #f8f8f8; /* Light gray background */
+}
 .app__grid > .card { flex: 1 1 0; min-width: 240px; overflow: auto; }
 
 .resizer { width: 8px; cursor: col-resize; position: relative; user-select: none; touch-action: none; align-self: stretch; background: transparent; }
 .resizer::after { content:''; position:absolute; top:0; bottom:0; left:3px; width:2px; background: var(--border); transition: background .15s ease; }
 .resizer:hover::after { background: #9ca3af; }
-
-.card { background:white; border:1px solid var(--border); border-radius: var(--radius); padding:12px; }
-.card__title { font-weight:600; margin-bottom:10px; }
-.card--stack > .divider { height:1px; background:var(--border); margin:12px 0; }
 
 .hint { margin-top: 8px; color: var(--muted); font-size: 12px; }
 .hint__code { background:#f3f4f6; padding:2px 6px; border-radius:8px; }
