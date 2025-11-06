@@ -400,7 +400,7 @@ export function NiiViewer({ query }) {
 
   return (
     <div className='flex flex-col gap-3'>
-      <div className='flex items-center justify-between'>
+      <div className='flex items-center justify-end'>
         <div className='card__title'>NIfTI Viewer</div>
         <div className='flex items-center gap-2 text-sm text-gray-500'>
           {query && (

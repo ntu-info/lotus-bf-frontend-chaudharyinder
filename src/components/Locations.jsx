@@ -1,8 +1,8 @@
 import { API_BASE } from '../api'
-// Locations.jsx
 import { useEffect, useMemo, useState } from 'react'
-
-function cls (...xs) { return xs.filter(Boolean).join(' ') }
+import { Button } from "@/components/ui/button" // Added Button import
+import { Input } from "@/components/ui/input"   // Added Input import
+import { Label } from "@/components/ui/label"   // Added Label import
 
 export function Locations ({ query }) {
   const [rows, setRows] = useState([])
@@ -20,7 +20,10 @@ export function Locations ({ query }) {
   useEffect(() => { setPage(1); setOffset(0) }, [query])
 
   useEffect(() => {
-    if (!query) return
+    if (!query) {
+      setRows([]) // Clear rows when query is empty
+      return
+    }
     let alive = true
     const ac = new AbortController()
     ;(async () => {
@@ -67,89 +70,112 @@ export function Locations ({ query }) {
     else { setSortKey(k); setSortDir('asc') }
   }
 
-  return (
-    <div className='flex flex-col rounded-2xl border'>
-      <div className='flex items-center justify-between p-3'>
-        <div className='font-semibold'>Locations</div>
-        <div className='text-sm text-gray-500'>{query ? `query: ${query}` : '請在上方建立查詢'}</div>
-      </div>
-
-      <div className='flex flex-wrap items-end gap-3 px-3 pb-2 text-sm'>
-        <label className='flex flex-col'>r (mm)
-          <input type='number' step='0.5' value={r} onChange={e=>setR(Number(e.target.value)||6)} className='w-24 rounded-lg border px-2 py-1'/>
-        </label>
-        <label className='flex flex-col'>limit
-          <input type='number' step='10' value={limit} onChange={e=>setLimit(Math.max(0, Number(e.target.value)||0))} className='w-24 rounded-lg border px-2 py-1'/>
-        </label>
-        <label className='flex flex-col'>offset
-          <input type='number' step='10' value={offset} onChange={e=>setOffset(Math.max(0, Number(e.target.value)||0))} className='w-24 rounded-lg border px-2 py-1'/>
-        </label>
-      </div>
-
-      {!query && <div className='px-3 pb-4 text-sm text-gray-500'>尚未提供查詢字串。</div>}
-      {query && loading && (
-        <div className='grid gap-3 p-3'>
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className='h-10 animate-pulse rounded-lg bg-gray-100' />
-          ))}
+  // --- NEW: Loading Spinner State ---
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-8 h-96">
+        <div className="flex flex-col items-center gap-3">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-slate-200 border-t-blue-500"></div>
+          <p className="text-slate-600 text-sm">Loading locations...</p>
         </div>
-      )}
-      {query && err && (
-        <div className='mx-3 mb-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700'>
+      </div>
+    )
+  }
+
+  // --- NEW: Graphical Empty State (for no query OR no results) ---
+  if (!loading && !err && sorted.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center p-12 text-center h-96">
+        <svg className="w-16 h-16 text-slate-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        <p className="text-slate-500 text-lg font-medium mb-2">
+          {query ? "No locations found" : "No query"}
+        </p>
+        <p className="text-slate-400 text-sm">
+          {query ? "Try a different search term" : "Enter a term in the query builder to begin"}
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className='flex flex-col'>
+      {err && (
+        <div className='m-3 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive'>
           {err}
         </div>
       )}
 
-      {query && !loading && !err && (
-        <div className='overflow-auto'>
-          <table className='min-w-full text-sm'>
-            <thead className='sticky top-0 bg-gray-50 text-left'>
-              <tr>
-                {[
-                  { key: 'study_id', label: 'Study ID' },
-                  { key: 'x', label: 'X' },
-                  { key: 'y', label: 'Y' },
-                  { key: 'z', label: 'Z' }
-                ].map(({ key, label }) => (
-                  <th key={key} className='cursor-pointer px-3 py-2 font-semibold' onClick={() => changeSort(key)}>
-                    <span className='inline-flex items-center gap-2'>
-                      {label}
-                      <span className='text-xs text-gray-500'>{sortKey === key ? (sortDir === 'asc' ? '▲' : '▼') : ''}</span>
-                    </span>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {pageRows.length === 0 ? (
-                <tr><td colSpan={4} className='px-3 py-4 text-gray-500'>無資料</td></tr>
-              ) : (
-                pageRows.map((r, i) => (
-                  <tr key={i} className={cls(i % 2 ? 'bg-white' : 'bg-gray-50')}>
-                    <td className='px-3 py-2 align-top'>{r.study_id}</td>
-                    <td className='px-3 py-2 align-top'>{r.x}</td>
-                    <td className='px-3 py-2 align-top'>{r.y}</td>
-                    <td className='px-3 py-2 align-top'>{r.z}</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+      {/* --- Kept controls, but used Shadcn components --- */}
+      <div className='flex flex-wrap items-end gap-3 px-3 pb-2 text-sm'>
+        <div>
+          <Label htmlFor="loc-r" className="text-xs">r (mm)</Label>
+          <Input id="loc-r" type='number' step='0.5' value={r} onChange={e=>setR(Number(e.target.value)||6)} className='w-24 h-8' />
         </div>
-      )}
+        <div>
+          <Label htmlFor="loc-limit" className="text-xs">Limit</Label>
+          <Input id="loc-limit" type='number' step='10' value={limit} onChange={e=>setLimit(Math.max(0, Number(e.target.value)||0))} className='w-24 h-8' />
+        </div>
+        <div>
+          <Label htmlFor="loc-offset" className="text-xs">Offset</Label>
+          <Input id="loc-offset" type='number' step='10' value={offset} onChange={e=>setOffset(Math.max(0, Number(e.target.value)||0))} className='w-24 h-8' />
+        </div>
+      </div>
 
-      {query && !loading && !err && (
-        <div className='flex items-center justify-between border-t p-3 text-sm'>
-          <div>共 <b>{sorted.length}</b> 筆，頁 <b>{page}</b>/<b>{totalPages}</b></div>
-          <div className='flex items-center gap-2'>
-            <button disabled={page <= 1} onClick={() => setPage(1)} className='rounded-lg border px-2 py-1 disabled:opacity-40'>⏮</button>
-            <button disabled={page <= 1} onClick={() => setPage(p => Math.max(1, p - 1))} className='rounded-lg border px-2 py-1 disabled:opacity-40'>上一頁</button>
-            <button disabled={page >= totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))} className='rounded-lg border px-2 py-1 disabled:opacity-40'>下一頁</button>
-            <button disabled={page >= totalPages} onClick={() => setPage(totalPages)} className='rounded-lg border px-2 py-1 disabled:opacity-40'>⏭</button>
+      {/* --- NEW: Styled HTML Table --- */}
+      {!err && (
+        <>
+          <div className="rounded-lg border border-slate-200 overflow-hidden">
+            <table className="min-w-full divide-y divide-slate-200">
+              <thead className="bg-slate-50">
+                <tr>
+                  {[
+                    { key: 'study_id', label: 'Study ID' },
+                    { key: 'x', label: 'X' },
+                    { key: 'y', label: 'Y' },
+                    { key: 'z', label: 'Z' }
+                  ].map(({ key, label }) => (
+                    <th
+                      key={key}
+                      className='px-4 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider cursor-pointer'
+                      onClick={() => changeSort(key)}
+                    >
+                      <span className='inline-flex items-center gap-2'>
+                        {label}
+                        <span className='text-xs text-muted-foreground'>{sortKey === key ? (sortDir === 'asc' ? '▲' : '▼') : ''}</span>
+                      </span>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-slate-100">
+                {pageRows.map((r, i) => (
+                  <tr key={i} className="hover:bg-slate-50 transition-colors">
+                    <td className='px-4 py-3 text-sm align-top'>{r.study_id}</td>
+                    <td className='px-4 py-3 text-sm align-top'>{r.x}</td>
+                    <td className='px-4 py-3 text-sm align-top'>{r.y}</td>
+                    <td className='px-4 py-3 text-sm align-top'>{r.z}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        </div>
+
+          {/* --- NEW: Pagination with Shadcn Buttons --- */}
+          <div className='flex items-center justify-between border-t border-slate-200 p-3 text-sm'>
+            <div className='text-muted-foreground'>
+              Total <b>{sorted.length}</b> records, page <b>{page}</b>/<b>{totalPages}</b>
+            </div>
+            <div className='flex items-center gap-2'>
+              <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => setPage(1)}>⏮</Button>
+              <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => setPage(p => Math.max(1, p - 1))}>Previous</Button>
+              <Button size="sm" variant="outline" disabled={page >= totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))}>Next</Button>
+              <Button size="sm" variant="outline" disabled={page >= totalPages} onClick={() => setPage(totalPages)}>⏭</Button>
+            </div>
+          </div>
+        </>
       )}
     </div>
   )
 }
-

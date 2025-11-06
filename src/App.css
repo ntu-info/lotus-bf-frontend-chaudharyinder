@@ -105,3 +105,100 @@ button:disabled, .btn:disabled { opacity:.55; cursor:not-allowed; }
 @media (min-width: 1024px) {
   .qb__input { min-width: 640px; }
 }
+
+/* ...existing code... */
+
+.app__header {
+  padding: 1.25rem 2rem;
+  border-bottom: 1px solid rgb(226 232 240);
+}
+
+.resizer {
+  width: 8px;
+  cursor: col-resize;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 10;
+}
+
+.resizer::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 3px;
+  height: 40px;
+  background: currentColor;
+  border-radius: 2px;
+  opacity: 0.3;
+}
+
+.resizer:hover::after {
+  opacity: 0.8;
+}
+
+/* Add smooth scrolling */
+* {
+  scroll-behavior: smooth;
+}
+
+/* Better focus states */
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* ...existing code... */
+
+@media (max-width: 768px) {
+  .app__grid {
+    flex-direction: column !important;
+  }
+  
+  .resizer {
+    display: none;
+  }
+  
+  .app__header {
+    padding: 1rem;
+  }
+  
+  .app__title {
+    font-size: 1.25rem;
+  }
+}
+
+/* This triggers when the screen is 1024px wide or less */
+@media (max-width: 1024px) {
+  .app__grid {
+    /* Change from 3 columns side-by-side to 1 column stacked vertically */
+    flex-direction: column !important;
+    overflow: auto; /* Allow the whole page to scroll */
+    padding: 0.5rem; /* Reduce padding on mobile */
+  }
+
+  /* This is the most important part.
+    It targets your 3 cards and overrides the 'flex-basis' style
+    that the resizing logic adds, so they behave like normal blocks.
+  */
+  .app__grid > div:not(.resizer) {
+    flex-basis: auto !important; /* Resets the width/height */
+    min-height: 400px;         /* Ensures they have some space */
+    width: 100% !important;    /* Force them to be full-width */
+  }
+
+  /* Hide the resizer handles, as they are useless on a stacked layout */
+  .resizer {
+    display: none !important;
+  }
+
+  .app__header {
+    padding: 1rem; /* Make header smaller on mobile */
+  }
+
+  .app__title {
+    font-size: 1.25rem; /* Make title smaller on mobile */
+  }
+}

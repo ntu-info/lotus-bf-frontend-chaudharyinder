@@ -70,67 +70,88 @@ export default function App () {
 
   return (
     // Added flex flex-col to make the app fill the screen height
-    <div className="app flex flex-col">
+    <div className="app flex flex-col h-screen">
       {/* The <style> block is gone */}
 
-      <header className="app__header">
-        <h1 className="app__title">LoTUS-BF</h1>
-        <div className="app__subtitle">Location-or-Term Unified Search for Brain Functions</div>
+      <header className="app__header bg-gradient-to-r from-slate-800 to-slate-700 shadow-lg">
+        <div className="flex items-center gap-3">
+          {/* Add an icon/logo */}
+          <svg className="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+          </svg>
+          <div>
+            <h1 className="app__title text-2xl font-bold text-white">LoTUS-BF</h1>
+            <div className="app__subtitle text-slate-300 text-sm">Location-or-Term Unified Search for Brain Functions</div>
+          </div>
+        </div>
       </header>
 
-      <main className="app__grid" ref={gridRef}>
+      <main
+        className="app__grid bg-muted/40" // <-- Adds a light gray background
+        ref={gridRef}
+      >
         
-        {/* --- LEFT PANE (Updated) --- */}
+        {/* --- LEFT PANE --- */}
         <Card
           style={{ flexBasis: `${sizes[0]}%` }}
-          className="flex flex-col overflow-hidden" // flex-col lets content fill space
+          className="flex flex-col overflow-hidden border-slate-200 shadow-md hover:shadow-lg transition-shadow"
         >
-          <CardHeader>
-            <CardTitle>Terms</CardTitle>
+          <CardHeader className="bg-slate-50 border-b">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+              </svg>
+              Terms
+            </CardTitle>
           </CardHeader>
-          <CardContent className="flex-grow overflow-auto"> {/* flex-grow makes it fill */}
+          <CardContent className="flex-grow overflow-auto p-4">
             <Terms onPickTerm={handlePickTerm} />
           </CardContent>
         </Card>
 
-        <div className="resizer" aria-label="Resize left/middle" onMouseDown={(e) => startDrag(0, e)} />
+        <div className="resizer bg-slate-300 hover:bg-blue-400 transition-colors" aria-label="Resize left/middle" onMouseDown={(e) => startDrag(0, e)} />
 
-        {/* --- MIDDLE PANE (Updated) --- */}
+        {/* --- MIDDLE PANE --- */}
         <Card
           style={{ flexBasis: `${sizes[1]}%` }}
-          className="flex flex-col overflow-hidden"
+          className="flex flex-col overflow-hidden border-slate-200 shadow-md hover:shadow-lg transition-shadow"
         >
-          {/* QueryBuilder is now in a CardHeader for better spacing */}
-          <CardHeader>
+          <CardHeader className="bg-slate-50 border-b space-y-3">
             <QueryBuilder query={query} setQuery={setQuery} />
           </CardHeader>
-          <CardContent className="flex-grow flex flex-col"> {/* flex-grow */}
+          <CardContent className="flex-grow flex flex-col p-0">
             <Tabs defaultValue="studies" className="flex-grow flex flex-col">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="studies">Studies</TabsTrigger>
-                <TabsTrigger value="locations">Locations</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2 bg-slate-100 p-1 rounded-none border-b">
+                <TabsTrigger value="studies" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                  📊 Studies
+                </TabsTrigger>
+                <TabsTrigger value="locations" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                  📍 Locations
+                </TabsTrigger>
               </TabsList>
-              <TabsContent value="studies" className="flex-grow overflow-auto">
+              <TabsContent value="studies" className="flex-grow overflow-auto p-4 mt-0">
                 <Studies query={query} />
               </TabsContent>
-              <TabsContent value="locations" className="flex-grow overflow-auto">
+              <TabsContent value="locations" className="flex-grow overflow-auto p-4 mt-0">
                 <Locations query={query} />
               </TabsContent>
             </Tabs>
           </CardContent>
         </Card>
 
-        <div className="resizer" aria-label="Resize middle/right" onMouseDown={(e) => startDrag(1, e)} />
+        <div className="resizer bg-slate-300 hover:bg-blue-400 transition-colors" aria-label="Resize middle/right" onMouseDown={(e) => startDrag(1, e)} />
 
-        {/* --- RIGHT PANE (Updated) --- */}
+        {/* --- RIGHT PANE --- */}
         <Card
           style={{ flexBasis: `${sizes[2]}%` }}
-          className="flex flex-col overflow-auto" // overflow-auto to scroll the whole pane
+          className="flex flex-col overflow-auto border-slate-200 shadow-md hover:shadow-lg transition-shadow"
         >
-          <CardHeader>
-            <CardTitle>NIfTI Viewer</CardTitle>
+          <CardHeader className="bg-slate-50 border-b">
+            <CardTitle className="text-lg flex items-center gap-2">
+              🧠 NIfTI Viewer
+            </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4">
             <NiiViewer query={query} />
           </CardContent>
         </Card>
