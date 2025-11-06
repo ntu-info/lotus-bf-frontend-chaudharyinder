@@ -35,7 +35,8 @@ export function Terms ({ onPickTerm }) {
   const filtered = useMemo(() => {
     const s = search.trim().toLowerCase()
     if (!s) return terms
-    return terms.filter(t => t.toLowerCase().includes(s))
+    // Only show terms that START WITH the search string
+    return terms.filter(t => t.toLowerCase().startsWith(s))
   }, [terms, search])
 
   return (
@@ -56,12 +57,11 @@ export function Terms ({ onPickTerm }) {
         </Button>
       </div>
 
-      {/* --- NEW: Loading Spinner State --- */}
       {loading && (
         <div className="flex items-center justify-center p-8 flex-grow">
           <div className="flex flex-col items-center gap-3">
             <div className="animate-spin rounded-full h-12 w-12 border-4 border-slate-200 border-t-blue-500"></div>
-            <p className="text-slate-600 text-sm">Loading terms...</p>
+            <p className="text-slate-600 dark:text-slate-400 text-sm">Loading terms...</p>
           </div>
         </div>
       )}
@@ -72,14 +72,13 @@ export function Terms ({ onPickTerm }) {
         </div>
       )}
 
-      {/* --- NEW: Graphical Empty State --- */}
       {!loading && !err && filtered.length === 0 && (
          <div className="flex flex-col items-center justify-center p-12 text-center flex-grow">
-          <svg className="w-16 h-16 text-slate-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-16 h-16 text-slate-300 dark:text-slate-700 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
-          <p className="text-slate-500 text-lg font-medium mb-2">No terms found</p>
-          <p className="text-slate-400 text-sm">
+          <p className="text-slate-500 dark:text-slate-400 text-lg font-medium mb-2">No terms found</p>
+          <p className="text-slate-400 dark:text-slate-500 text-sm">
             {search ? "Try a different search" : "Terms list is empty"}
           </p>
         </div>
@@ -92,7 +91,8 @@ export function Terms ({ onPickTerm }) {
               <li key={`${t}-${idx}`}>
                 <a
                   href="#"
-                  className='block w-full text-left p-1.5 rounded text-sm hover:bg-muted'
+                  // --- CHANGE IS HERE ---
+                  className='block w-full text-left p-1.5 rounded text-sm text-foreground hover:bg-muted'
                   title={t}
                   aria-label={`Add term ${t}`}
                   onClick={(e) => { e.preventDefault(); onPickTerm?.(t); }}

@@ -1,10 +1,11 @@
 import { API_BASE } from '../api'
 import { useEffect, useMemo, useState } from 'react'
-import { Button } from "@/components/ui/button" // Added Button import
-import { Input } from "@/components/ui/input"   // Added Input import
-import { Label } from "@/components/ui/label"   // Added Label import
+import { Button } from "@/components/ui/button" 
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
-export function Locations ({ query }) {
+// --- ADD 'onCoordinateClick' to props ---
+export function Locations ({ query, onCoordinateClick }) {
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(false)
   const [err, setErr] = useState('')
@@ -21,7 +22,7 @@ export function Locations ({ query }) {
 
   useEffect(() => {
     if (!query) {
-      setRows([]) // Clear rows when query is empty
+      setRows([]) 
       return
     }
     let alive = true
@@ -50,6 +51,7 @@ export function Locations ({ query }) {
   }, [query, r, limit, offset])
 
   const sorted = useMemo(() => {
+    // ... (sorting logic unchanged) ...
     const arr = [...rows]
     const dir = sortDir === 'asc' ? 1 : -1
     arr.sort((a,b) => {
@@ -70,8 +72,8 @@ export function Locations ({ query }) {
     else { setSortKey(k); setSortDir('asc') }
   }
 
-  // --- NEW: Loading Spinner State ---
   if (loading) {
+    // ... (loading spinner unchanged) ...
     return (
       <div className="flex items-center justify-center p-8 h-96">
         <div className="flex flex-col items-center gap-3">
@@ -82,8 +84,8 @@ export function Locations ({ query }) {
     )
   }
 
-  // --- NEW: Graphical Empty State (for no query OR no results) ---
   if (!loading && !err && sorted.length === 0) {
+    // ... (empty state unchanged) ...
     return (
       <div className="flex flex-col items-center justify-center p-12 text-center h-96">
         <svg className="w-16 h-16 text-slate-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -107,7 +109,7 @@ export function Locations ({ query }) {
         </div>
       )}
 
-      {/* --- Kept controls, but used Shadcn components --- */}
+      {/* --- Controls (unchanged) --- */}
       <div className='flex flex-wrap items-end gap-3 px-3 pb-2 text-sm'>
         <div>
           <Label htmlFor="loc-r" className="text-xs">r (mm)</Label>
@@ -123,12 +125,11 @@ export function Locations ({ query }) {
         </div>
       </div>
 
-      {/* --- NEW: Styled HTML Table --- */}
       {!err && (
         <>
-          <div className="rounded-lg border border-slate-200 overflow-hidden">
-            <table className="min-w-full divide-y divide-slate-200">
-              <thead className="bg-slate-50">
+          <div className="rounded-lg border border-slate-200 overflow-hidden dark:border-slate-700">
+            <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+              <thead className="bg-slate-50 dark:bg-slate-800">
                 <tr>
                   {[
                     { key: 'study_id', label: 'Study ID' },
@@ -138,7 +139,7 @@ export function Locations ({ query }) {
                   ].map(({ key, label }) => (
                     <th
                       key={key}
-                      className='px-4 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider cursor-pointer'
+                      className='px-4 py-3 text-left text-xs font-medium text-slate-700 dark:text-slate-300 uppercase tracking-wider cursor-pointer'
                       onClick={() => changeSort(key)}
                     >
                       <span className='inline-flex items-center gap-2'>
@@ -149,9 +150,14 @@ export function Locations ({ query }) {
                   ))}
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-slate-100">
+              <tbody className="bg-white divide-y divide-slate-100 dark:bg-slate-950 dark:divide-slate-800">
                 {pageRows.map((r, i) => (
-                  <tr key={i} className="hover:bg-slate-50 transition-colors">
+                  // --- CLICK HANDLER ADDED ---
+                  <tr 
+                    key={i} 
+                    className="hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors cursor-pointer"
+                    onClick={() => onCoordinateClick({ x: r.x, y: r.y, z: r.z })}
+                  >
                     <td className='px-4 py-3 text-sm align-top'>{r.study_id}</td>
                     <td className='px-4 py-3 text-sm align-top'>{r.x}</td>
                     <td className='px-4 py-3 text-sm align-top'>{r.y}</td>
@@ -162,8 +168,8 @@ export function Locations ({ query }) {
             </table>
           </div>
 
-          {/* --- NEW: Pagination with Shadcn Buttons --- */}
-          <div className='flex items-center justify-between border-t border-slate-200 p-3 text-sm'>
+          {/* --- Pagination (unchanged) --- */}
+          <div className='flex items-center justify-between border-t border-slate-200 dark:border-slate-700 p-3 text-sm'>
             <div className='text-muted-foreground'>
               Total <b>{sorted.length}</b> records, page <b>{page}</b>/<b>{totalPages}</b>
             </div>

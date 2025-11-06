@@ -69,7 +69,7 @@ export function Studies ({ query }) {
       <div className="flex items-center justify-center p-8 h-96">
         <div className="flex flex-col items-center gap-3">
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-slate-200 border-t-blue-500"></div>
-          <p className="text-slate-600 text-sm">Loading studies...</p>
+          <p className="text-slate-600 dark:text-slate-400 text-sm">Loading studies...</p>
         </div>
       </div>
     )
@@ -79,13 +79,13 @@ export function Studies ({ query }) {
   if (!loading && !err && sorted.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-12 text-center h-96">
-        <svg className="w-16 h-16 text-slate-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-16 h-16 text-slate-300 dark:text-slate-700 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
-        <p className="text-slate-500 text-lg font-medium mb-2">
+        <p className="text-slate-500 dark:text-slate-400 text-lg font-medium mb-2">
           {query ? "No studies found" : "No query"}
         </p>
-        <p className="text-slate-400 text-sm">
+        <p className="text-slate-400 dark:text-slate-500 text-sm">
           {query ? "Try a different search term" : "Enter a term in the query builder to begin"}
         </p>
       </div>
@@ -103,9 +103,9 @@ export function Studies ({ query }) {
       {/* --- NEW: Styled HTML Table --- */}
       {!err && (
         <>
-          <div className="rounded-lg border border-slate-200 overflow-hidden">
-            <table className="min-w-full divide-y divide-slate-200">
-              <thead className="bg-slate-50">
+          <div className="rounded-lg border border-slate-200 overflow-hidden dark:border-slate-700">
+            <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+              <thead className="bg-slate-50 dark:bg-slate-800">
                 <tr>
                   {[
                     { key: 'year', label: 'Year' },
@@ -115,7 +115,7 @@ export function Studies ({ query }) {
                   ].map(({ key, label }) => (
                     <th
                       key={key}
-                      className='px-4 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider cursor-pointer'
+                      className='px-4 py-3 text-left text-xs font-medium text-slate-700 dark:text-slate-300 uppercase tracking-wider cursor-pointer'
                       onClick={() => changeSort(key)}
                     >
                       <span className='inline-flex items-center gap-2'>
@@ -126,9 +126,9 @@ export function Studies ({ query }) {
                   ))}
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-slate-100">
+              <tbody className="bg-white divide-y divide-slate-100 dark:bg-slate-950 dark:divide-slate-800">
                 {pageRows.map((r, i) => (
-                  <tr key={i} className="hover:bg-slate-50 transition-colors">
+                  <tr key={i} className="hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors">
                     <td className='px-4 py-3 text-sm whitespace-nowrap align-top'>{r.year ?? ''}</td>
                     <td className='px-4 py-3 text-sm align-top'>{r.journal || ''}</td>
                     <td className='px-4 py-3 text-sm max-w-[340px] align-top'>
@@ -141,7 +141,7 @@ export function Studies ({ query }) {
             </table>
           </div>
 
-          <div className='flex items-center justify-between border-t border-slate-200 p-3 text-sm'>
+          <div className='flex items-center justify-between border-t border-slate-200 dark:border-slate-700 p-3 text-sm'>
             <div className='text-muted-foreground'>
               Total <b>{sorted.length}</b> records, page <b>{page}</b>/<b>{totalPages}</b>
             </div>

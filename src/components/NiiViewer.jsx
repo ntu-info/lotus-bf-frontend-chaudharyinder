@@ -21,70 +21,62 @@ import { Slider } from "@/components/ui/slider"
 
 const MNI_BG_URL = 'static/mni_2mm.nii.gz'
 
-// ... (All logic functions like isStandardMNI2mm, MNI2MM, asTypedArray, minmax, etc. remain unchanged) ...
-// Detect MNI152 2mm template dims & spacing (91x109x91, 2mm iso)
 function isStandardMNI2mm(dims, voxelMM) {
   const okDims = Array.isArray(dims) && dims[0]===91 && dims[1]===109 && dims[2]===91;
   const okSp   = voxelMM && Math.abs(voxelMM[0]-2)<1e-3 && Math.abs(voxelMM[1]-2)<1e-3 && Math.abs(voxelMM[2]-2)<1e-3;
   return okDims && okSp;
 }
-// Standard MNI152 2mm affine (voxel i,j,k -> MNI mm):
-// x = -2*i + 90;  y = 2*j - 126;  z = 2*k - 72
 const MNI2MM = { x0: 90, y0: -126, z0: -72, vx: 2, vy: 2, vz: 2 };
 
-export function NiiViewer({ query }) {
+// --- PROPS UPDATED ---
+export function NiiViewer({ query, coords, setCoords }) {
   const [loadingBG, setLoadingBG] = useState(false)
   const [loadingMap, setLoadingMap] = useState(false)
   const [errBG, setErrBG] = useState('')
   const [errMap, setErrMap] = useState('')
 
-  // backend params (map generation)
-  // const [voxel, setVoxel] = useState(2.0) // <-- These are not used in the UI, but I see FWHM is
   const [fwhm, setFwhm] = useState(10.0)
-  // const [kernel, setKernel] = useState('gauss') // <-- Not used in UI
-  // const [r, setR] = useState(6.0) // <-- Not used in UI
-
+  
   // overlay controls
   const [overlayAlpha, setOverlayAlpha] = useState(0.5)
-  const [posOnly, setPosOnly] = useState(true) // <-- Not used in UI
-  const [useAbs, setUseAbs] = useState(false) // <-- Not used in UI
-  const [thrMode, setThrMode] = useState('pctl') // default: Percentile (per request)
+  const [posOnly, setPosOnly] = useState(true)
+  const [useAbs, setUseAbs] = useState(false)
+  const [thrMode, setThrMode] = useState('pctl')
   const [pctl, setPctl] = useState(95)
-  const [thrValue, setThrValue] = useState(0)     // used when mode === 'value'
-
+  const [thrValue, setThrValue] = useState(0)
+  
   // volumes
-  const bgRef  = useRef(null)   // { data, dims:[nx,ny,nz], voxelMM:[vx,vy,vz], min, max }
-  const mapRef = useRef(null)   // { data, dims:[nx,ny,nz], voxelMM:[vx,vy,vz], min, max }
+  const bgRef  = useRef(null)
+  const mapRef = useRef(null)
   const getVoxelMM = () => {
     const vm = bgRef.current?.voxelMM ?? mapRef.current?.voxelMM ?? [1,1,1]
     return { x: vm[0], y: vm[1], z: vm[2] }
   }
-  const [dims, setDims] = useState([0,0,0]) // canvas dims (prefer BG; overlay only if same dims)
+  const [dims, setDims] = useState([0,0,0])
 
   // slice indices (voxel coordinates in [0..N-1])
   const [ix, setIx] = useState(0) // sagittal (X)
   const [iy, setIy] = useState(0) // coronal  (Y)
   const [iz, setIz] = useState(0) // axial    (Z)
 
-  // Neurosynth-style displayed coords: signed, centered at middle voxel
-  const [cx, setCx] = useState('0')
-  const [cy, setCy] = useState('0')
-  const [cz, setCz] = useState('0')
+  // --- INTERNAL COORD STATE REMOVED ---
+  // const [cx, setCx] = useState('0')
+  // const [cy, setCy] = useState('0')
+  // const [cz, setCz] = useState('0')
 
   const canvases = [useRef(null), useRef(null), useRef(null)]
 
-  // NOTE: Kept params that are not in the UI (voxel, kernel, r)
   const mapUrl = useMemo(() => {
     if (!query) return ''
     const u = new URL(`${API_BASE}/query/${encodeURIComponent(query)}/nii`)
-    u.searchParams.set('voxel', '2.0') // Was using state, but no UI for it. Hardcoding to default.
+    u.searchParams.set('voxel', '2.0') 
     u.searchParams.set('fwhm', String(fwhm))
-    u.searchParams.set('kernel', 'gauss') // Was using state, but no UI for it.
-    u.searchParams.set('r', '6.0') // Was using state, but no UI for it.
+    u.searchParams.set('kernel', 'gauss') 
+    u.searchParams.set('r', '6.0') 
     return u.toString()
-  }, [query, fwhm]) // Removed voxel, kernel, r from dependency array
+  }, [query, fwhm]) 
 
-  // ---------- utils (no changes) ----------
+  // --- (Helper functions: asTypedArray, minmax, percentile, loadNifti, clamp, idx2coord, coord2idx are unchanged) ---
   function asTypedArray (header, buffer) {
     switch (header.datatypeCode) {
       case nifti.NIFTI1.TYPE_INT8:    return new Int8Array(buffer)
@@ -146,8 +138,6 @@ export function NiiViewer({ query }) {
     const vz = Math.abs(header.pixDims?.[3] ?? 1)
     return { data: f32, dims:[nx,ny,nz], voxelMM:[vx,vy,vz], min: mn, max: mx }
   }
-
-  // ... (clamp, idx2coord, coord2idx functions remain unchanged) ...
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v))
   const AXIS_SIGN = { x: -1, y: 1, z: 1 }
   const idx2coord = (i, n, axis) => {
@@ -180,8 +170,9 @@ export function NiiViewer({ query }) {
     const idx = Math.round(v);
     return Math.max(0, Math.min(n-1, idx));
   }
+  // --- (End of helper functions) ---
   
-  // ... (useEffect hooks for loadNifti, thrValue, load map remain unchanged) ...
+  // --- useEffect hook for loading background NIfTI ---
   useEffect(() => {
     let alive = true
     setLoadingBG(true); setErrBG('')
@@ -194,7 +185,8 @@ export function NiiViewer({ query }) {
         const [nx,ny,nz] = bg.dims
         const mx = Math.floor(nx/2), my = Math.floor(ny/2), mz = Math.floor(nz/2)
         setIx(mx); setIy(my); setIz(mz)
-        setCx('0'); setCy('0'); setCz('0')
+        // Set global coords state
+        setCoords({ x: '0', y: '0', z: '0' })
       } catch (e) {
         if (!alive) return
         setErrBG(e?.message || String(e))
@@ -205,8 +197,9 @@ export function NiiViewer({ query }) {
       }
     })()
     return () => { alive = false }
-  }, [])
+  }, [setCoords]) // Added setCoords dependency
   
+  // --- (useEffect for thrValue unchanged) ---
   useEffect(() => {
     const mn = mapRef.current?.min ?? 0
     const mx = mapRef.current?.max ?? 1
@@ -215,6 +208,7 @@ export function NiiViewer({ query }) {
     }
   }, [mapRef.current, dims])
 
+  // --- useEffect hook for loading map NIfTI ---
   useEffect(() => {
     if (!mapUrl) { mapRef.current = null; return }
     let alive = true
@@ -229,7 +223,8 @@ export function NiiViewer({ query }) {
           const [nx,ny,nz] = mv.dims
           const mx = Math.floor(nx/2), my = Math.floor(ny/2), mz = Math.floor(nz/2)
           setIx(mx); setIy(my); setIz(mz)
-          setCx('0'); setCy('0'); setCz('0')
+          // Set global coords state
+          setCoords({ x: '0', y: '0', z: '0' })
         }
       } catch (e) {
         if (!alive) return
@@ -241,10 +236,8 @@ export function NiiViewer({ query }) {
       }
     })()
     return () => { alive = false }
-  }, [mapUrl])
+  }, [mapUrl, setCoords]) // Added setCoords dependency
 
-
-  // ... (useMemo for mapThreshold remains unchanged) ...
   const mapThreshold = useMemo(() => {
     const mv = mapRef.current
     if (!mv) return null
@@ -252,7 +245,7 @@ export function NiiViewer({ query }) {
     return percentile(mv.data, Math.max(0, Math.min(100, Number(pctl) || 95)))
   }, [thrMode, thrValue, pctl, mapRef.current])
 
-  // ... (drawSlice function remains unchanged) ...
+  // --- (drawSlice function is unchanged) ---
   function drawSlice (canvas, axis /* 'z' | 'y' | 'x' */, index) {
     const [nx, ny, nz] = dims
     
@@ -269,15 +262,15 @@ export function NiiViewer({ query }) {
     if (axis === 'y') { w = nx; h = nz; if (bgOK)  getBG  = (x,y)=> bg.data[sx(x) + index*nx + y*nx*ny]; if (mapOK) getMap = (x,y)=> map.data[sx(x) + index*nx + y*nx*ny] }
     if (axis === 'x') { w = ny; h = nz; if (bgOK)  getBG  = (x,y)=> bg.data[index + x*nx + y*nx*ny]; if (mapOK) getMap = (x,y)=> map.data[index + x*nx + y*nx*ny] }
 
-    if (!canvas || w === 0 || h === 0) return; // Guard clause
+    if (!canvas || w === 0 || h === 0) return; 
     canvas.width = w; canvas.height = h;
-    canvas.style.aspectRatio = `${w} / ${h}`; // <-- *** FIX 1: ADDED THIS LINE ***
+    canvas.style.aspectRatio = `${w} / ${h}`; // This is the fix for letterboxing
     const ctx = canvas.getContext('2d', { willReadFrequently: false })
-    if (!ctx) return; // Guard clause
+    if (!ctx) return; 
     const img = ctx.createImageData(w, h)
-
+    
     const alpha = Math.max(0, Math.min(1, overlayAlpha))
-    const R = 255, G = 0, B = 0
+    const R = 255, G = 0, B = 0 // Red overlay
     const thr = mapThreshold
 
     const bgMin = bg?.min ?? 0
@@ -318,60 +311,87 @@ export function NiiViewer({ query }) {
     }
     ctx.putImageData(img, 0, 0)
 
+    // Draw crosshairs
     ctx.save()
-    ctx.strokeStyle = '#00ff00'
+    ctx.strokeStyle = '#00ff00' // Green crosshair
     ctx.lineWidth = 1
     let cx = 0, cy = 0
-    if (axis === 'z') {
+    if (axis === 'z') { // X by Y plane
       cx = Math.max(0, Math.min(w-1, (X_RIGHT_ON_SCREEN_RIGHT ? (w - 1 - ix) : ix)))
       cy = Math.max(0, Math.min(h-1, iy))
-    } else if (axis === 'y') {
+    } else if (axis === 'y') { // X by Z plane
       cx = Math.max(0, Math.min(w-1, (X_RIGHT_ON_SCREEN_RIGHT ? (w - 1 - ix) : ix)))
       cy = Math.max(0, Math.min(h-1, iz))
-    } else {
+    } else { // Y by Z plane
       cx = Math.max(0, Math.min(w-1, iy))
       cy = Math.max(0, Math.min(h-1, iz))
     }
-    const screenY = h - 1 - cy
+    const screenY = h - 1 - cy // account for vertical flip
     ctx.beginPath(); ctx.moveTo(cx + 0.5, 0); ctx.lineTo(cx + 0.5, h); ctx.stroke()
     ctx.beginPath(); ctx.moveTo(0, screenY + 0.5); ctx.lineTo(w, screenY + 0.5); ctx.stroke()
     ctx.restore()
   }
 
-  // ... (onCanvasClick, useEffect for coords, commitCoord, useEffect for redraw remain unchanged) ...
+  // --- onCanvasClick MODIFIED ---
   function onCanvasClick (e, axis) {
     const canvas = e.currentTarget
     const rect = canvas.getBoundingClientRect()
     const x = Math.floor((e.clientX - rect.left) * canvas.width / rect.width)
     const y = Math.floor((e.clientY - rect.top) * canvas.height / rect.height)
-    const srcY = canvas.height - 1 - y // invert because we draw with vertical flip
+    const srcY = canvas.height - 1 - y 
     const [nx,ny,nz] = dims
     
     const toIdxX = (screenX) => (X_RIGHT_ON_SCREEN_RIGHT ? (nx - 1 - screenX) : screenX);
-    if (axis === 'z') { const xi = toIdxX(x); setIx(xi); setIy(srcY); setCx(String(idx2coord(xi, nx, 'x'))); setCy(String(idx2coord(srcY, ny, 'y'))) }
-    else if (axis === 'y') { const xi = toIdxX(x); setIx(xi); setIz(srcY); setCx(String(idx2coord(xi, nx, 'x'))); setCz(String(idx2coord(srcY, nz, 'z'))) }
-    else { setIy(x); setIz(srcY); setCy(String(idx2coord(x, ny, 'y'))); setCz(String(idx2coord(srcY, nz, 'z'))) }
+    
+    let newCoords = { ...coords };
+    
+    if (axis === 'z') { 
+      const xi = toIdxX(x); 
+      setIx(xi); 
+      setIy(srcY); 
+      newCoords.x = String(idx2coord(xi, nx, 'x'));
+      newCoords.y = String(idx2coord(srcY, ny, 'y'));
+    } else if (axis === 'y') { 
+      const xi = toIdxX(x); 
+      setIx(xi); 
+      setIz(srcY); 
+      newCoords.x = String(idx2coord(xi, nx, 'x'));
+      newCoords.z = String(idx2coord(srcY, nz, 'z'));
+    } else { 
+      setIy(x); 
+      setIz(srcY); 
+      newCoords.y = String(idx2coord(x, ny, 'y'));
+      newCoords.z = String(idx2coord(srcY, nz, 'z'));
+    }
+    setCoords(newCoords); // Set global state
   }
 
+  // --- NEW useEffect to sync props to internal index state ---
   useEffect(() => {
     const [nx,ny,nz] = dims
-    if (!nx) return
-    setCx(String(idx2coord(ix, nx, 'x')))
-    setCy(String(idx2coord(iy, ny, 'y')))
-    setCz(String(idx2coord(iz, nz, 'z')))
-  }, [ix,iy,iz,dims])
+    if (!nx) return // Don't run if dims aren't set
 
+    // On prop change, update the *internal index* state
+    const newIx = coord2idx(Number(coords.x) || 0, nx, 'x');
+    const newIy = coord2idx(Number(coords.y) || 0, ny, 'y');
+    const newIz = coord2idx(Number(coords.z) || 0, nz, 'z');
+    
+    setIx(newIx);
+    setIy(newIy);
+    setIz(newIz);
+
+  }, [coords, dims]) // Runs when coords (from props) or dims changes
+
+  // --- commitCoord MODIFIED ---
   const commitCoord = (axis) => {
-    const [nx,ny,nz] = dims
-    let vStr = axis==='x' ? cx : axis==='y' ? cy : cz
-    if (vStr === '' || vStr === '-' ) return
-    const parsed = parseFloat(vStr)
-    if (Number.isNaN(parsed)) return
-    if (axis==='x') setIx(coord2idx(parsed, nx, 'x'))
-    if (axis==='y') setIy(coord2idx(parsed, ny, 'y'))
-    if (axis==='z') setIz(coord2idx(parsed, nz, 'z'))
+    // We just need to make sure the string prop is a clean number
+    // The useEffect above will handle updating the index (ix, iy, iz)
+    if (axis==='x') setCoords({...coords, x: String(Number(coords.x) || 0)})
+    if (axis==='y') setCoords({...coords, y: String(Number(coords.y) || 0)})
+    if (axis==='z') setCoords({...coords, z: String(Number(coords.z) || 0)})
   }
 
+  // --- (useEffect for redraw is unchanged) ---
   useEffect(() => {
     const [nx, ny, nz] = dims
     if (!nx) return
@@ -383,36 +403,38 @@ export function NiiViewer({ query }) {
   }, [
     dims, ix, iy, iz,
     overlayAlpha, posOnly, useAbs, thrMode, pctl, thrValue,
-    loadingBG, loadingMap, errBG, errMap, query, bgRef.current, mapRef.current // Added refs
+    loadingBG, loadingMap, errBG, errMap, query, bgRef.current, mapRef.current
   ])
 
 
   const [nx, ny, nz] = dims
 
-  // slice configs (labels only; numbers removed)
   const sliceConfigs = [
     { key: 'y', name: 'Coronal',  axisLabel: 'Y', canvasRef: canvases[1] },
     { key: 'x', name: 'Sagittal', axisLabel: 'X', canvasRef: canvases[2] },
     { key: 'z', name: 'Axial',    axisLabel: 'Z', canvasRef: canvases[0] },
   ]
 
-  // --- REMOVED old nsInputCls and nsLabelCls constants ---
-
   return (
     <div className='flex flex-col gap-3'>
-      <div className='flex items-center justify-end'>
-        <div className='card__title'>NIfTI Viewer</div>
-        <div className='flex items-center gap-2 text-sm text-gray-500'>
-          {query && (
-            <Button asChild variant="outline" size="sm">
-              <a href={mapUrl}>Download map</a>
-            </Button>
-          )}
-        </div>
+      {/* --- HEADER MODIFIED --- */}
+      <div className='flex items-center justify-end gap-2'>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => setCoords({ x: '0', y: '0', z: '0' })}
+        >
+          Center View
+        </Button>
+        {query && (
+          <Button asChild variant="outline" size="sm">
+            <a href={mapUrl}>Download map</a>
+          </Button>
+        )}
       </div>
 
-      {/* --- Threshold mode & value (Modernized) --- */}
-      <div className='rounded-xl border p-4 space-y-4 text-sm'>
+      {/* --- Threshold controls (Dark mode classes added) --- */}
+      <div className='rounded-xl border p-4 space-y-4 text-sm dark:border-slate-700'>
         <div className='grid grid-cols-2 items-center gap-x-4 gap-y-2'>
           <Label htmlFor='thr-mode'>Threshold mode</Label>
           <Select value={thrMode} onValueChange={setThrMode}>
@@ -421,7 +443,7 @@ export function NiiViewer({ query }) {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value='value'>Value</SelectItem>
-              <SelectItem value->Percentile</SelectItem>
+              <SelectItem value='pctl'>Percentile</SelectItem>
             </SelectContent>
           </Select>
         
@@ -451,16 +473,18 @@ export function NiiViewer({ query }) {
             </>
           )}
         </div>
+      </div>
 
-        {/* --- Coordinate inputs (Modernized) --- */}
+      {/* --- Coordinate inputs MODIFIED --- */}
+      <div className='rounded-xl border p-4 space-y-4 text-sm dark:border-slate-700'>
         <div className='grid grid-cols-3 items-center gap-4'>
           <div className='space-y-1.5'>
             <Label htmlFor='coord-x'>X (mm)</Label>
             <Input
               id='coord-x'
               type='text'
-              value={cx}
-              onChange={e=>setCx(e.target.value)}
+              value={coords.x}
+              onChange={e=>setCoords({...coords, x: e.target.value})}
               onBlur={()=>commitCoord('x')}
               onKeyDown={e=>{ if(e.key==='Enter'){ commitCoord('x') } }}
               aria-label='X coordinate (centered)'
@@ -471,8 +495,8 @@ export function NiiViewer({ query }) {
             <Input
               id='coord-y'
               type='text'
-              value={cy}
-              onChange={e=>setCy(e.target.value)}
+              value={coords.y}
+              onChange={e=>setCoords({...coords, y: e.target.value})}
               onBlur={()=>commitCoord('y')}
               onKeyDown={e=>{ if(e.key==='Enter'){ commitCoord('y') } }}
               aria-label='Y coordinate (centered)'
@@ -483,8 +507,8 @@ export function NiiViewer({ query }) {
             <Input
               id='coord-z'
               type='text'
-              value={cz}
-              onChange={e=>setCz(e.target.value)}
+              value={coords.z}
+              onChange={e=>setCoords({...coords, z: e.target.value})}
               onBlur={()=>commitCoord('z')}
               onKeyDown={e=>{ if(e.key==='Enter'){ commitCoord('z') } }}
               aria-label='Z coordinate (centered)'
@@ -493,7 +517,7 @@ export function NiiViewer({ query }) {
         </div>
       </div>
 
-      {/* --- Brain views (Already uses Tailwind, no changes) --- */}
+      {/* --- Brain views (unchanged) --- */}
       {(loadingBG || loadingMap) && (
         <div className='grid gap-3 lg:grid-cols-3'>
           {Array.from({ length: 3 }).map((_, i) => (
@@ -515,8 +539,7 @@ export function NiiViewer({ query }) {
               <div className='text-xs text-muted-foreground'>{name} ({axisLabel})</div>
               <canvas
                 ref={canvasRef}
-                // --- *** FIX 2: MODIFIED THIS LINE *** ---
-                className='w-full rounded-xl border' // Removed 'h-64' and 'object-contain'
+                className='w-full rounded-xl border' // This is the fix for letterboxing
                 onClick={(e)=>onCanvasClick(e, key)}
                 style={{ cursor: 'crosshair', imageRendering: 'pixelated' }}
               />
@@ -525,8 +548,8 @@ export function NiiViewer({ query }) {
         </div>
       )}
 
-      {/* map generation params (Modernized) */}
-      <div className='rounded-xl border p-4 text-sm space-y-1.5'>
+      {/* --- Controls (Dark mode classes added) --- */}
+      <div className='rounded-xl border p-4 text-sm space-y-1.5 dark:border-slate-700'>
         <Label htmlFor='fwhm'>Gaussian FWHM (mm)</Label>
         <Input
           id='fwhm'
@@ -538,8 +561,7 @@ export function NiiViewer({ query }) {
         />
       </div>
 
-      {/* overlay controls (Modernized) */}
-      <div className='rounded-xl border p-4 text-sm space-y-2'>
+      <div className='rounded-xl border p-4 text-sm space-y-2 dark:border-slate-700'>
         <Label>Overlay alpha ({overlayAlpha.toFixed(2)})</Label>
         <Slider
           value={[overlayAlpha]}
