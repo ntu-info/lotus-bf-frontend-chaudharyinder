@@ -4,7 +4,10 @@ import react from '@vitejs/plugin-react'
 import { fileURLToPath, URL } from 'node:url'
 
 export default defineConfig({
-  base: '/',
+  // --- THIS IS THE MODIFICATION ---
+  // It must match the path of your homepage URL
+  base: '/lotus-bf-frontend-chaudharyinder/',
+  // ------------------------------
 
   plugins: [react()],
   resolve: {
@@ -16,4 +19,3 @@ export default defineConfig({
     allowedHosts: ['mil.psy.ntu.edu.tw']
   }
 })
-
