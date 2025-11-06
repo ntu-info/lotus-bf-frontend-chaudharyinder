@@ -6,7 +6,7 @@ import { fileURLToPath, URL } from 'node:url'
 export default defineConfig({
   // --- THIS IS THE MODIFICATION ---
   // It must match the path of your homepage URL
-  base: '/lotus-bf-frontend-chaudharyinder/',
+  base: '/',
   // ------------------------------
 
   plugins: [react()],
